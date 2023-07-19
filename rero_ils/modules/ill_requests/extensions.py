@@ -19,7 +19,7 @@
 
 from rero_ils.modules.operation_logs.extensions import \
     OperationLogObserverExtension
-
+from rero_ils.modules.utils import extracted_data_from_ref
 
 class IllRequestOperationLogObserverExtension(OperationLogObserverExtension):
     """Observer on ``ILLRequest`` to build operation log when it changes."""
@@ -31,9 +31,12 @@ class IllRequestOperationLogObserverExtension(OperationLogObserverExtension):
         :return a dict with additional informations.
         """
         data = {'ill_request': {
-            'status': record.get('status'),
-            'library_pid': record.get_library().pid
+            'status': record.get('status')
         }}
+        try:
+            data['library_pid'] = record.get_library().pid
+        except:
+            data['location_pid'] = extracted_data_from_ref(record['pickup_location']['$ref'])
         if loan_status := record.get('loan_status'):
             data['ill_request']['loan_status'] = loan_status
         return data
